@@ -1,0 +1,250 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>佩純的生日任務</title>
+  <style>
+    body {
+      margin: 0;
+      font-family: 'Segoe UI', sans-serif;
+      background: linear-gradient(to bottom, #ffe0f0, #fff);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      height: 100vh;
+      overflow: hidden;
+      position: relative;
+    }
+    .card {
+      background: white;
+      padding: 30px;
+      border-radius: 20px;
+      box-shadow: 0 8px 16px rgba(0,0,0,0.2);
+      text-align: center;
+      max-width: 400px;
+      width: 90%;
+      z-index: 10;
+    }
+    button {
+      background: #ff69b4;
+      color: white;
+      border: none;
+      padding: 10px 20px;
+      font-size: 1.1rem;
+      border-radius: 8px;
+      cursor: pointer;
+      margin: 10px;
+    }
+    audio {
+      display: none;
+    }
+    /* 心形飄落 */
+    .heart {
+      position: absolute;
+      width: 20px;
+      height: 18px;
+      background: red;
+      transform: rotate(-45deg);
+      animation: fall linear infinite;
+      opacity: 0.8;
+      z-index: 5;
+    }
+    .heart::before,
+    .heart::after {
+      content: '';
+      position: absolute;
+      width: 20px;
+      height: 18px;
+      background: red;
+      border-radius: 50%;
+    }
+    .heart::before { top: -10px; left: 0; }
+    .heart::after { top: 0; left: 10px; }
+    @keyframes fall {
+      0% { transform: translateY(-50px) rotate(-45deg); opacity: 1; }
+      100% { transform: translateY(110vh) rotate(-45deg); opacity: 0; }
+    }
+    /* RWD 響應式 */
+    @media (max-width: 600px) {
+      .card { padding: 20px; }
+      button { width: 100%; font-size: 1rem; }
+    }
+    /* 燦爛煙火 */
+    #fireworks-canvas {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 1;
+    }
+  </style>
+</head>
+<body>
+  <canvas id="fireworks-canvas"></canvas>
+
+  <div class="card" id="intro">
+    <h2>🎉 歡迎來到佩純的生日任務！</h2>
+    <p>要完成這個挑戰，才能拿到妳的生日禮物喔 🎁</p>
+    <button onclick="startGame()">Let's Go!</button>
+  </div>
+
+  <div class="card" id="question" style="display:none;">
+    <h3 id="q-text"></h3>
+    <div id="choices"></div>
+  </div>
+
+  <div class="card" id="result" style="display:none;">
+    <h2 id="res-text"></h2>
+    <button onclick="nextStep()">繼續</button>
+  </div>
+
+  <div class="card" id="final" style="display:none;">
+    <h2>🎂 生日快樂，佩純！</h2>
+    <p>謝謝妳一直在我身邊。<br>今天是妳的日子，我想讓妳知道<br><strong>我真的真的很愛妳 💖</strong></p>
+    <audio id="bg-music" loop>
+      <source src="https://example.com/your-music.mp3" type="audio/mp3">
+    </audio>
+  </div>
+
+  <script>
+    const questions = [
+      { text: '猜猜誰最愛你？', choices: ['SNOOPY', 'ERIC 😘'], answer: 1 },
+      { text: '哪一天是我們的紀念日？', choices: ['18月1日', '1月18日'], answer: 1 },
+      { text: '最喜歡的人是？', choices: ['CINDY', 'LEBRON'], answer: 1 }
+    ];
+    let current = 0;
+
+    function startGame() {
+      document.getElementById('intro').style.display = 'none';
+      document.getElementById('question').style.display = 'block';
+      loadQuestion();
+      startHearts();
+    }
+
+    function loadQuestion() {
+      const q = questions[current];
+      document.getElementById('q-text').innerText = q.text;
+      const choicesDiv = document.getElementById('choices');
+      choicesDiv.innerHTML = '';
+      q.choices.forEach((c, i) => {
+        const btn = document.createElement('button');
+        btn.innerText = c;
+        btn.onclick = () => checkAnswer(i);
+        choicesDiv.appendChild(btn);
+      });
+    }
+
+    function checkAnswer(idx) {
+      const correct = questions[current].answer;
+      if (idx === correct) {
+        document.getElementById('question').style.display = 'none';
+        const res = document.getElementById('result');
+        document.getElementById('res-text').innerText = '💗 答對了！';
+        res.style.display = 'block';
+      } else {
+        alert('😅 女人妳在玩火！');
+      }
+    }
+
+    function nextStep() {
+      document.getElementById('result').style.display = 'none';
+      current++;
+      if (current < questions.length) {
+        document.getElementById('question').style.display = 'block';
+        loadQuestion();
+      } else {
+        showFinal();
+      }
+    }
+
+    function showFinal() {
+      document.getElementById('final').style.display = 'block';
+      document.getElementById('bg-music').play();
+      launchFireworks();
+    }
+
+    /* 動態生成心形 */
+    function startHearts() {
+      setInterval(() => {
+        const heart = document.createElement('div');
+        heart.className = 'heart';
+        heart.style.left = Math.random() * 100 + 'vw';
+        heart.style.animationDuration = Math.random() * 3 + 2 + 's';
+        document.body.appendChild(heart);
+        setTimeout(() => heart.remove(), 5000);
+      }, 300);
+    }
+
+    /* 簡易煙火效果 */
+    function launchFireworks() {
+      const canvas = document.getElementById('fireworks-canvas');
+      const ctx = canvas.getContext('2d');
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+      const fireworks = [];
+
+      function random(min, max) { return Math.random() * (max - min) + min; }
+
+      class Firework {
+        constructor() {
+          this.x = random(0, canvas.width);
+          this.y = canvas.height;
+          this.targetY = random(canvas.height/2, canvas.height/4);
+          this.speed = random(2, 4);
+          this.particles = [];
+        }
+        update() {
+          if (this.y > this.targetY) {
+            this.y -= this.speed;
+            drawCircle(this.x, this.y, 2, 'white');
+          } else if (!this.exploded) {
+            this.explode();
+            this.exploded = true;
+          }
+          this.particles.forEach(p => p.update());
+        }
+        explode() {
+          for (let i = 0; i < 30; i++) {
+            this.particles.push(new Particle(this.x, this.y));
+          }
+        }
+      }
+      class Particle {
+        constructor(x, y) {
+          this.x = x; this.y = y;
+          this.speedX = random(-3, 3);
+          this.speedY = random(-3, 3);
+          this.alpha = 1;
+        }
+        update() {
+          this.x += this.speedX;
+          this.y += this.speedY;
+          this.alpha -= 0.02;
+          drawCircle(this.x, this.y, 2, `rgba(255,${Math.floor(random(100,255))},0,${this.alpha})`);
+        }
+      }
+      function drawCircle(x, y, r, color) {
+        ctx.beginPath();
+        ctx.arc(x, y, r, 0, Math.PI*2);
+        ctx.fillStyle = color;
+        ctx.fill();
+      }
+      function loop() {
+        ctx.fillStyle = 'rgba(0,0,0,0.2)';
+        ctx.fillRect(0,0,canvas.width,canvas.height);
+        if (Math.random() < 0.05) fireworks.push(new Firework());
+        fireworks.forEach((f, i) => {
+          f.update();
+          if (f.particles.length && f.particles.every(p => p.alpha <= 0)) fireworks.splice(i,1);
+        });
+        requestAnimationFrame(loop);
+      }
+      loop();
+    }
+  </script>
+</body>
+</html>
